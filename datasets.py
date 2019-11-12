@@ -75,7 +75,6 @@ def prepare_url(dataset_folder, nrows):
         dataset_folder,
         "url" + ("" if nrows is None else "-" + str(nrows)) + ".pkl")
     if os.path.exists(pickle_url):
-        print('Pickle file exists')
         with open(pickle_url, 'rb') as fd:
             data = pickle.load(fd)
             return data
@@ -83,8 +82,10 @@ def prepare_url(dataset_folder, nrows):
     if not os.path.isfile(local_url):
         urlretrieve(url, local_url)
     with tarfile.open(local_url) as tar:
-        tar.extractall()
-    filenames = glob.glob('Day*.svm')
+        tar.extractall(path=dataset_folder)
+
+    extracted_dir = os.path.join(dataset_folder, 'url_svmlight')
+    filenames = glob.glob(os.path.join(extracted_dir, 'Day*.svm'))
 
     cat_path = os.path.join(dataset_folder, 'concantenated.svm')
     with open(cat_path, 'w') as ofd:
@@ -92,7 +93,8 @@ def prepare_url(dataset_folder, nrows):
             with open(f) as ifd:
                 ofd.write(ifd.read() + '\n')
 
-    X, y = load_svmlight_file('concantenated.svm')
+    X, y = load_svmlight_file(
+        os.path.join(dataset_folder, 'concantenated.svm'))
 
     X_train, X_test, y_train, y_test = train_test_split(X,
                                                         y,
