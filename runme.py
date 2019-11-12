@@ -43,9 +43,7 @@ def get_number_processors(args):
 
 
 def print_sys_info(args):
-    import xgboost
-    import lightgbm
-    import catboost
+    from impls import xgboost, lightgbm, catboost
     print("System  : %s" % sys.version)
     print("Xgboost : %s" % xgboost.__version__)
     print("LightGBM: %s" % lightgbm.__version__)
