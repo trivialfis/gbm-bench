@@ -100,6 +100,8 @@ def prepare_url(dataset_folder, nrows):
                                                         y,
                                                         random_state=77,
                                                         test_size=0.2)
+    y_train = (y_train == -1).astype(int)
+    y_test = (y_test == -1).astype(int)
 
     data = Data(X_train, X_test, y_train, y_test, LearningTask.CLASSIFICATION)
     with open(pickle_url, 'wb') as fd:
