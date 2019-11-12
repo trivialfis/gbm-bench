@@ -31,6 +31,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.datasets import load_svmlight_file
 
 import pandas as pd
+import tarfile
+import glob
+
 
 if sys.version_info[0] >= 3:
     from urllib.request import urlretrieve  # pylint: disable=import-error,no-name-in-module
@@ -45,8 +48,8 @@ class LearningTask(Enum):
 
 
 class Data:  # pylint: disable=too-few-public-methods,too-many-arguments
-    def __init__(self, X_train, X_test, y_train, y_test, learning_task, qid_train=None,
-                 qid_test=None):
+    def __init__(self, X_train, X_test, y_train, y_test, learning_task,
+                 qid_train=None, qid_test=None):
         self.X_train = X_train
         self.X_test = X_test
         self.y_train = y_train
@@ -62,6 +65,44 @@ def prepare_dataset(dataset_folder, dataset, nrows):
         os.makedirs(dataset_folder)
     prepare_function = globals()["prepare_" + dataset]
     return prepare_function(dataset_folder, nrows)
+
+
+def prepare_url(dataset_folder, nrows):
+    url = 'http://archive.ics.uci.edu/ml/machine-learning-databases/url/' \
+        'url_svmlight.tar.gz'
+    local_url = os.path.join(dataset_folder, os.path.basename(url))
+    pickle_url = os.path.join(
+        dataset_folder,
+        "url" + ("" if nrows is None else "-" + str(nrows)) + ".pkl")
+    if os.path.exists(pickle_url):
+        print('Pickle file exists')
+        with open(pickle_url, 'rb') as fd:
+            data = pickle.load(fd)
+            return data
+
+    if not os.path.isfile(local_url):
+        urlretrieve(url, local_url)
+    with tarfile.open(local_url) as tar:
+        tar.extractall()
+    filenames = glob.glob('Day*.svm')
+
+    cat_path = os.path.join(dataset_folder, 'concantenated.svm')
+    with open(cat_path, 'w') as ofd:
+        for f in filenames:
+            with open(f) as ifd:
+                ofd.write(ifd.read() + '\n')
+
+    X, y = load_svmlight_file('concantenated.svm')
+
+    X_train, X_test, y_train, y_test = train_test_split(X,
+                                                        y,
+                                                        random_state=77,
+                                                        test_size=0.2)
+
+    data = Data(X_train, X_test, y_train, y_test, LearningTask.CLASSIFICATION)
+    with open(pickle_url, 'wb') as fd:
+        pickle.dump(data, fd)
+    return data
 
 
 def prepare_airline(dataset_folder, nrows):  # pylint: disable=too-many-locals
