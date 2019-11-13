@@ -68,6 +68,8 @@ class Algorithm(ABC):
             return XgbGPUHistDaskOldAlgorithm()
         if name == 'xgb-cpu':
             return XgbCPUHistAlgorithm()
+        if name == 'xgb-approx':
+            return XgbCPUApproxAlgorithm()
         if name == 'lgbm-cpu':
             return LgbmCPUAlgorithm()
         if name == 'lgbm-gpu':
@@ -218,6 +220,13 @@ class XgbCPUHistAlgorithm(XgbAlgorithm):
     def configure(self, data, args):
         params = super(XgbCPUHistAlgorithm, self).configure(data, args)
         params.update({"tree_method": "hist"})
+        return params
+
+
+class XgbCPUApproxAlgorithm(XgbAlgorithm):
+    def configure(self, data, args):
+        params = super(XgbCPUApproxAlgorithm, self).configure(data, args)
+        params.update({'tree_method': 'approx'})
         return params
 
 
